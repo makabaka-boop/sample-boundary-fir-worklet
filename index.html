@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>本地音频 FIR 实验台</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0d1117; color: #d7dde3; margin: 24px; }
+  h1 { font-size: 20px; }
+  section { background: #161b22; border: 1px solid #2a3138; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; }
+  button { background: #21262d; color: #d7dde3; border: 1px solid #3d444d; border-radius: 6px; padding: 6px 14px; cursor: pointer; margin-right: 6px; }
+  button:hover { background: #2d333b; }
+  textarea { width: 100%; box-sizing: border-box; background: #0d1117; color: #d7dde3; border: 1px solid #3d444d; border-radius: 6px; font-family: monospace; padding: 8px; }
+  input[type=number] { background: #0d1117; color: #d7dde3; border: 1px solid #3d444d; border-radius: 6px; padding: 6px; width: 160px; font-family: monospace; }
+  .stat { display: inline-block; margin-right: 22px; font-family: monospace; }
+  .stat b { color: #4fc3f7; }
+  #log { background: #0d1117; border: 1px solid #2a3138; border-radius: 6px; padding: 8px; height: 180px; overflow-y: scroll; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+  canvas { display: block; border: 1px solid #2a3138; border-radius: 6px; }
+  .hint { color: #8b949e; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>本地音频 FIR 实验台（AudioWorklet · 因果 FIR · ≤128 系数）</h1>
+<p class="hint">
+  确定性单声道测试信号经真实 AudioWorklet 做因果 FIR；换参指令携带运行代号 / 命令序号 / 目标样本下标，
+  处理器在计算该样本前一次性整组换入，时钟 = 处理器本轮实际处理样本数（与页面计时器无关）。
+  绘制与下载只使用处理器回传的实际输出块。
+</p>
+
+<section>
+  <button id="btnStart">开始 / 新一轮（显式重置）</button>
+  <button id="btnPause">暂停 AudioContext</button>
+  <button id="btnResume">恢复 AudioContext</button>
+  <button id="btnDownload">下载捕获数据 (WAV)</button>
+  <p>
+    <span class="stat">运行代号 <b id="runId">（未开轮）</b></span>
+    <span class="stat">处理器时钟(样本) <b id="clock">0</b></span>
+    <span class="stat">AudioContext <b id="ctxState">未创建</b></span>
+    <span class="stat">已捕获样本 <b id="captured">0</b></span>
+    <span class="stat">当前系数个数 <b id="taps">1</b></span>
+  </p>
+</section>
+
+<section>
+  <p>
+    预设系数组：
+    <button data-preset="identity">恒等 [1]</button>
+    <button data-preset="avg2">两点平均</button>
+    <button data-preset="diff">差分 [1,-1]</button>
+    <button data-preset="avg8">8 点平均</button>
+    <button data-preset="lp64">64 点低通</button>
+    <button data-preset="lp128">128 点低通</button>
+  </p>
+  <textarea id="coefs" rows="4">1</textarea>
+  <p>
+    目标样本下标 <input id="target" type="number" min="0" step="1" value="0">
+    命令序号 <span class="stat"><b id="nextSeq">1</b></span>（自动递增）
+    <button id="btnSend">发送换参指令</button>
+  </p>
+  <p class="hint">同一下标多条指令按命令序号裁决；目标已错过的指令会被处理器明确拒绝；只有“开始 / 新一轮”才清空时钟与历史。</p>
+</section>
+
+<section>
+  <canvas id="plot" width="960" height="240"></canvas>
+  <p class="hint">蓝线：处理器回传的实际输出（最近窗口）；橙色竖线：换参实际生效位置。</p>
+</section>
+
+<section>
+  <pre id="log"></pre>
+</section>
+
+<script src="test-signal.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

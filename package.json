@@ -1,0 +1,17 @@
+{
+  "name": "audio-fir-lab",
+  "version": "1.0.0",
+  "scripts": {
+    "serve": "node serve.mjs",
+    "test:core": "node tests/test-core.mjs",
+    "test:browser": "node tests/test-browser.mjs",
+    "test": "node tests/test-core.mjs && node tests/test-browser.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "本地音频 FIR 实验台：真实 AudioWorklet 因果 FIR + 样本级换参",
+  "dependencies": {
+    "playwright": "^1.63.0"
+  }
+}
